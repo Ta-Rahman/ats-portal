@@ -1,0 +1,6 @@
+#!/bin/sh
+# Führt die DB-Regeltests (05_tests.sql) erneut aus. Die Tests laufen in einer Transaktion mit
+# ROLLBACK und verändern keine Daten. Aufruf: docker compose exec -T db ats-db-tests
+set -e
+exec psql -v ON_ERROR_STOP=1 -X -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+     -f /docker-entrypoint-initdb.d/05_tests.sql

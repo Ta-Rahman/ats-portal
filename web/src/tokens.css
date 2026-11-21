@@ -1,0 +1,82 @@
+/* Design-Tokens des ATS-Portals – Gestaltung nach dem CI von Clear Cut Solutions (CCS).
+   CCS ist die eigene Software-Marke der Person, die dieses Projekt erstellt hat, und steht hier als
+   Marke der Portal-Software; der Arbeitgeber auf der Karriereseite bleibt fiktiv
+   (siehe docs/marke/HINWEIS.md).
+
+   Quellen (nur gelesen; übernommen sind Werte, kein Code):
+     [R] brand/README.md der Marke – Farbtabelle („Colour“), Schrift („Type“)
+     [T] assets/css/design-tokens.css der Marke – helles Thema (:root)
+   Nur helles Thema. Alle Werte stehen als hsl()/Hex ohne var(), damit werkzeuge/belege/kontrast.mjs
+   sie direkt lesen kann. Kontrast nach WCAG 2.2: Text ≥ 4,5:1 (SC 1.4.3), Begrenzungen von
+   Bedienelementen und Fokusanzeige ≥ 3:1 (SC 1.4.11); „Seite“ = --color-bg.
+
+   Angepasste Markenwerte (Original → neu, Grund). Die Zeile des Tokens trägt den Originalwert als
+   Kommentar „angepasst: Marke …“; kontrast.mjs rechnet daraus den Vorher-Wert.
+     --color-muted          [T] --text-muted hsl(27 10% 45%) → [T] --text-secondary hsl(27 14% 34%)
+                            Original 4,30:1 auf der Seite, 4,01:1 auf --color-surface (< 4,5:1).
+     --color-border-strong  [T] --border-strong hsl(33 18% 52%) → hsl(33 18% 48%)
+                            Original 2,96:1 auf --color-surface, 2,79:1 auf --color-surface-muted (< 3:1).
+     --color-primary        [T] --brand-primary hsl(178 64% 30%) → [T] --brand-primary-hover hsl(178 66% 25%)
+                            Original 4,49:1 als Linktext auf der Seite (< 4,5:1). Der Hover rückt eine
+                            Stufe nach (--color-primary-dark = [T] --brand-primary-active). Das
+                            unveränderte Türkis bleibt Fokusfarbe (--color-focus, ≥ 3:1).
+     --color-success        [T] --color-success hsl(146 38% 38%) → hsl(146 38% 30%)
+                            Original 4,06:1 auf der Seite (< 4,5:1).
+     --color-warning        [T] --color-warning hsl(32 90% 48%) → hsl(32 90% 30%)
+                            Original 2,41:1 auf --color-warning-bg (< 4,5:1); in [T] ein Signal-Orange, kein Textton.
+   Abgeleitete Werte (in der Marke nicht vorhanden): --color-error-bg, --color-success-bg,
+   --color-warning-bg (Farbton der Statusfarbe, aufgehellt auf 93–95 %) und --color-error-dark
+   (Hover des Gefahr-Buttons, Helligkeit 10 Punkte unter --color-error).
+   Gold ([R] Gold #EBB733, 1,70:1 auf der Seite) hat bewusst kein Token: Es erscheint nur in Logo und
+   Favicon, nie als Text und nie als alleiniges Signal.
+   Alle Verhältnisse: kleinerer Wert aus exakter hsl-Umrechnung und 8-Bit-sRGB (so liefert der
+   Vite-Build aus). Beleg: docs/belege/iteration6/kontrast.txt. */
+
+/* Schrift Geist ([R] „Type“: Name und Fließtext der Marke). Selbst gehostet, kein CDN: eine variable
+   woff2-Datei (Gewicht 100–900, Latin-Teilmenge) aus @fontsource-variable/geist 5.3.0, einmalig
+   heruntergeladen; Lizenz SIL OFL 1.1 in public/fonts/OFL.txt. font-display: swap zeigt den Text
+   sofort in der Ersatzschrift und tauscht, sobald Geist geladen ist. Zeichen außerhalb der Teilmenge
+   (z. B. ⚠) übernimmt die nächste Schrift in --font-sans. */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/geist-latin-wght-normal.woff2') format('woff2');
+}
+
+:root {
+  /* Flächen */
+  --color-bg: hsl(40 55% 95%);              /* [R] Cream #F9F5EB = [T] --surface-ground: Seite */
+  --color-surface: hsl(40 40% 92%);         /* [T] --surface-elevated: Kopfzeile, Filter, Tabellenkopf, Kanban-Spalte */
+  --color-card: hsl(0 0% 100%);             /* [T] --surface-card-solid: Karten, Eingabefelder */
+  --color-surface-intern: hsl(172 45% 90%); /* [T] --brand-primary-lightest: Kopfzeile des internen Bereichs */
+  --color-surface-muted: hsl(40 14% 90%);   /* [T] --surface-before-card: Kanban-Spalten der Endstufen */
+
+  /* Text */
+  --color-text: hsl(25 16% 16%);            /* [R] Ink #2F2822 = [T] --text-primary */
+  --color-muted: hsl(27 14% 34%);           /* angepasst: Marke hsl(27 10% 45%) */
+
+  /* Linien */
+  --color-border: hsl(35 22% 68%);          /* [T] --border-default: nur dekorative Trennlinien */
+  --color-border-strong: hsl(33 18% 48%);   /* angepasst: Marke hsl(33 18% 52%) */
+
+  /* Signalfarbe Türkis */
+  --color-primary: hsl(178 66% 25%);        /* angepasst: Marke hsl(178 64% 30%) */
+  --color-primary-dark: hsl(178 68% 20%);   /* [T] --brand-primary-active: Hover */
+  --color-on-primary: hsl(43 50% 97%);      /* [T] --text-on-brand: Text auf gefüllten Buttons */
+  --color-focus: hsl(178 64% 30%);          /* [T] --brand-primary (in [T] auch die Fokusfarbe) */
+
+  /* Status */
+  --color-error: hsl(0 60% 45%);            /* [T] --color-error */
+  --color-error-dark: hsl(0 60% 35%);       /* abgeleitet: Hover des Gefahr-Buttons */
+  --color-error-bg: hsl(0 65% 95%);         /* abgeleitet */
+  --color-success: hsl(146 38% 30%);        /* angepasst: Marke hsl(146 38% 38%) */
+  --color-success-bg: hsl(146 38% 93%);     /* abgeleitet */
+  --color-warning: hsl(32 90% 30%);         /* angepasst: Marke hsl(32 90% 48%) */
+  --color-warning-bg: hsl(32 90% 93%);      /* abgeleitet */
+
+  /* Form und Schrift */
+  --radius: 0.375rem;                       /* [T] --radius-sm (= bisher 6px) */
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; /* [R] Geist, Ersatz: Systemschriften */
+}

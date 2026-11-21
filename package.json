@@ -1,0 +1,13 @@
+{
+  "name": "ats-portal",
+  "private": true,
+  "description": "Testaufrufe für die laufende Docker-Compose-Umgebung (keine Abhängigkeiten; test:web braucht Node ≥ 22 auf dem Host)",
+  "scripts": {
+    "test": "npm run test:db && npm run test:api && npm run test:web",
+    "test:db": "docker compose exec -T db ats-db-tests",
+    "test:api": "docker compose exec -T api npm test",
+    "test:web": "node --test --test-concurrency=1 \"web/test/*.test.mjs\"",
+    "loeschlauf": "docker compose exec -T api npm run -s loeschlauf",
+    "lasttest": "node werkzeuge/lasttest/lasttest.mjs"
+  }
+}

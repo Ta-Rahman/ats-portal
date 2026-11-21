@@ -1,0 +1,10 @@
+# Zeilenenden im Repository einheitlich LF: Skripte und SQL laufen in Linux-Containern,
+# CRLF würde dort z. B. Shell-Skripte unbrauchbar machen.
+* text=auto eol=lf
+*.png binary
+# Schrift ausdrücklich binär, nicht nur über die automatische Erkennung von text=auto
+*.woff2 binary
+# Marken-Dateien (Iteration 6) Byte für Byte wie im Marken-Kit von Clear Cut Solutions einchecken:
+# keine Umwandlung der Zeilenenden (sonst wird das abschließende CRLF zu LF, die Datei ist 1 Byte kürzer).
+web/public/favicon.svg -text
+web/public/marke/** -text

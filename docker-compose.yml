@@ -1,0 +1,80 @@
+# ATS-Portal – lokale Entwicklungsumgebung (db, api, web).
+# Start: docker compose up -d --build  (Werte aus .env, Vorlage .env.example)
+name: ats-portal
+
+services:
+  db:
+    build: ./db
+    container_name: ats-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT}:5432"
+    volumes:
+      - ats-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Über TCP prüfen: während der Init-Kette lauscht Postgres nur auf dem Socket,
+      # "healthy" also erst nach Ende aller Init-Skripte (inkl. DB-Tests).
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+
+  api:
+    build: ./api
+    container_name: ats-api
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      PORT: "3000"
+      UPLOAD_DIR: /app/uploads
+      # Anmeldung (Iteration 3); ohne SESSION_SECRET startet Compose nicht.
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET fehlt in .env (Vorlage .env.example)}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SESSION_IDLE_SECONDS: ${SESSION_IDLE_SECONDS:-1800}
+      SESSION_ABSOLUTE_SECONDS: ${SESSION_ABSOLUTE_SECONDS:-28800}
+      # Löschlauf (Iteration 4): täglich um diese Uhrzeit (UTC, "off" = aus); Schonfrist verwaiste Dateien
+      DELETION_RUN_TIME: ${DELETION_RUN_TIME:-03:30}
+      DELETION_ORPHAN_GRACE_SECONDS: ${DELETION_ORPHAN_GRACE_SECONDS:-3600}
+      # Zugriffsprotokoll der API ohne personenbezogene Daten (Iteration 4)
+      REQUEST_LOG: ${REQUEST_LOG:-true}
+      # Rate-Limits (Iteration 4) je "Anzahl/Sekunden"
+      RATE_LIMIT_LOGIN_IP: ${RATE_LIMIT_LOGIN_IP:-20/60}
+      RATE_LIMIT_LOGIN_ACCOUNT: ${RATE_LIMIT_LOGIN_ACCOUNT:-10/900}
+      RATE_LIMIT_APPLY: ${RATE_LIMIT_APPLY:-10/3600}
+      RATE_LIMIT_STATUS: ${RATE_LIMIT_STATUS:-30/60}
+      RATE_LIMIT_WITHDRAW: ${RATE_LIMIT_WITHDRAW:-10/900}
+    # Kein Host-Port: Die API ist nur über nginx (web) erreichbar. Nur so stimmt "trust proxy 1" für
+    # jede Anfrage, und X-Forwarded-For lässt sich nicht am Proxy vorbei fälschen (Rate-Limits).
+    volumes:
+      # Dateiablage für spätere Uploads (Iteration 2); benanntes Volume statt Bind-Mount.
+      - ats-uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: ./web
+    container_name: ats-web
+    ports:
+      - "127.0.0.1:${WEB_HOST_PORT}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  ats-pgdata:
+    name: ats-pgdata
+  ats-uploads:
+    name: ats-uploads
